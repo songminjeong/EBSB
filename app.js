@@ -1,41 +1,40 @@
-var createError = require('http-errors');
 var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-
 var app = express();
+var path = require('path');
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
-
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
+var server = app.listen(8080, function () {
+    console.log("Express");
 });
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+app.use(express.static(path.join(__dirname, '/public')));
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+app.get('/demo', function (req, res) {
+    res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-module.exports = app;
+app.get('/test', function (req, res) {
+    res.sendFile(path.join(__dirname, 'public/main.html'));
+});
+
+function Circle(p, radius) {
+    this.p = p;
+    this.radius = radius;
+}
+
+Circle.prototype = {
+    area: function () {
+        return Math.PI * this.radius * this.radius;
+    },
+    setRadius: function(radius) {
+      this.radius = radius;
+      return this; // --> method chain 가능하게
+    },
+    print: function () {
+      console.log(this);
+      return this;
+    }
+};
+
+var a = new Circle({x:3, y: 0}, 5);
+
+console.log(a.constructor);
