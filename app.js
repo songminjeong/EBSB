@@ -1,10 +1,24 @@
 var express = require('express');
 var app = express();
+var http = require('http').createServer(app);
+
 var path = require('path');
 
-var server = app.listen(8080, function () {
-    console.log("Express");
+const MongoClient = require('mongodb').MongoClient
+const ObjectID = require('mongodb').ObjectID;
+const assert = require('assert');
+
+var client = null;
+var port = 8080;
+
+var httpServer = http.listen(port, function () {
+    MongoClient.connect('mongodb://localhost:27017', function (err, client) {
+        this.client = client;
+    });
+    console.log("http server running on " + port);
 });
+
+var io = require('socket.io').listen(httpServer);
 
 app.use(express.static(path.join(__dirname, '/public')));
 
@@ -16,74 +30,117 @@ app.get('/test', function (req, res) {
     res.sendFile(path.join(__dirname, 'public/main.html'));
 });
 
-function Circle(p, radius) {
-    this.p = p;
-    this.radius = radius;
-}
+app.post('/upload', function (req, res) {
+    var form = new formidable.IncomingForm();
+    console.log(form.multiples);
+    form.multiples = true;
+    form.maxFileSize = 1024 * 1024 * 1024;
+    form.maxFieldsSize = 1024 * 1024 * 1024;
+    form.hash = 'md5';
+    form.parse(req, function (err, fields, files) {
+        res.writeHead(200, {'content-type': 'text/plain'});
+        res.write('received upload:\n\n');
+        res.end(util.inspect({fields: fields, files: files}));
+    });
 
-Circle.prototype = {
-    area: function () {
-        return Math.PI * this.radius * this.radius;
-    },
-    setRadius: function(radius) {
-      this.radius = radius;
-      return this; // --> method chain 가능하게
-    },
-    print: function () {
-      console.log(this);
-      return this;
-    }
-};
+    form.on('end', function (fields, files) {
+        // console.log(this.openedFiles);
+        console.log(" 총 업로드 파일 갯수 == ", this.openedFiles.length);
+        for (var i = 0; i < this.openedFiles.length; i++) {
+            /* Temporary location of our uploaded file */
+            var temp_path = this.openedFiles[i].path;
+            console.log(this.openedFiles[i])
+            /* The file name of the uploaded file */
+            var file_name = this.openedFiles[i].name;
+            var split_file = file_name.split('.mp4')
+            var hash = this.openedFiles[i].hash
 
-v1 = new node({x: 3, y: 0.8, z: 0}, "v1");
-v2 = new node({x: 0, y: 0.8, z: 0}, "v2"); // 기준 y(높이)는 고려 안함
-v3 = new node({x: -3, y: 0.8, z: 0}, "v3"); // 위에서 본 모양 기준
-v4 = new node({x: 3, y: 0.8, z: 3.5}, "v4");
-v5 = new node({x: -3, y: 0.8, z: 3.5}, "v5");
+            /* Location where we want to copy the uploaded file */
+            var new_location = './files/';
 
-v_list = [v1, v2, v3, v4, v5];
+            console.log("temp_path == ", temp_path);
+            console.log("file_name == ", file_name);
+            //console.log(this.openedFiles[i]);
+            MongoClient.connect('mongodb://localhost:27017', function (err, client) {
+                assert.equal(null, err);
+                const db = client.db("virtualspace");
+                const collection = db.collection('concert');
+                console.log(temp_path);
 
-class node {
-    constructor(pos, id) {
-        this.pos = pos;
-        this.id = id;
-        this.link = [];
-    }
+                var final_location = new_location + split_file[0] + '/';
+                console.log(final_location + split_file[0] + ".mp4");
+                //filename directory generate
+                fs.move(temp_path, final_location + split_file[0] + ".mp4", function (err) {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        //file metadata get function
+                        fs.readFile(final_location + split_file[0] + ".mp4", function (err, data) {
+                            if (err)
+                                throw err;
+                            else {
+                                exif.metadata(data, function (err, metadata) {
+                                    console.log("memory" + JSON.stringify(process.memoryUsage()))
+                                    if (err)
+                                        throw err;
+                                    else {
+                                        var metadataObj = {}
+                                        for (var index in metadata) {
+                                            metadataObj[index] = metadata[index]
+                                        }
+                                        var preparedJSON = {
+                                            "filename": file_name,
+                                            "location": final_location,
+                                            "metadata": metadataObj
+                                        }
+                                        console.log(preparedJSON);
+                                        collection.insertOne(preparedJSON, function (error, response) {
+                                            console.log(response);
+                                        })
+                                    }
+                                });
+                            }
+                            ;
+                        });
+                        //mpd auto generator (powershell script execute)
+                        var spawn = require("child_process").spawn, child;
+                        child = spawn("powershell.exe", ["./files/auto.ps1", split_file[0]]);
+                        child.stdout.on("data", function (data) {
+                            console.log("Powershell Data: " + data);
+                        });
+                        child.stderr.on("data", function (data) {
+                            console.log("Powershell Script: " + data);
+                        });
+                        child.on("exit", function () {
+                            console.log("Powershell Script finished");
 
-    weight_link(node) {
-        let link_ref = {
-            x: {x_ref: "", val: 0},
-            y: {y_ref: "", val: 0},
-            z: {z_ref: "", val: 0}
-        };
-
-        let x_val = this.pos.x - node.pos.x;
-        let z_val = this.pos.z - node.pos.z;
-
-        if (x_val < 0)
-            link_ref.x.x_ref = "left";
-        else if (x_val > 0)
-            link_ref.x.x_ref = "right";
-
-        if (z_val < 0)
-            link_ref.z.z_ref = "up";
-        else if (z_val > 0)
-            link_ref.z.z_ref = "down";
-
-        link_ref.x.val = x_val > 0 ? x_val : -1 * x_val;
-        link_ref.z.val = z_val > 0 ? z_val : -1 * z_val;
-
-        this.link[node.id] = link_ref;
-    }
-
-    print_info() {
-        for (let info in this.link) {
-            console.log(info);
+                        });
+                        child.stdin.end();
+                    }
+                })
+            });
         }
-    }
-}
+    });
+});
 
-for (let v in v_list)
-    v1.weight_link(v);
+app.post('/transfer', function(req, res, next) {
+    const db = client.db("virtualspace");
+    const collection = db.collection('concert');
+    let data = collection.find();
+    // let json = JSON.parse(collection);
+    //json 형식으로 보내 준다.
+    console.log(data);
+    res.send(data);
+});
 
-v1.print_info();
+io.on('connection', function (socket) {
+    socket.on('start', function () {
+        MongoClient.connect('mongodb://localhost:27017', function (err, client) {
+            assert.equal(null, err);
+            const db = client.db("virtualspace");
+            const collection = db.collection('concert');
+            socket.emit('transfer', collection);
+        });
+        console.log("hello");
+    });
+});
