@@ -1,9 +1,9 @@
 var video = null;
 var video_sphere = null;
-var main_p = dashjs.MediaPlayer().create();
+var main_player = dashjs.MediaPlayer().create();
 
-main_p.initialize(document.querySelector('#view'));
-main_p.setAutoPlay(true);
+main_player.initialize(document.querySelector('#view'));
+main_player.setAutoPlay(true);
 
 AFRAME.registerComponent('view', {
     init: function () {
@@ -28,18 +28,18 @@ AFRAME.registerComponent('main', {
 
 
 function request_mpd(id) {
-    // TODO mpd and view matching needed
+    // TODO mpd and view matching required
     return "video/" + id + "/" + id + "_dash.mpd";
 }
 
 function chage_view(element) {
     // var vr_view = document.querySelector("#vr_view");
     var mpd = request_mpd(element.id); // video/v1/v1_dash.mpd
-    main_p.attachSource(mpd);
-    main_p.initialize();
+    main_player.attachSource(mpd);
+    main_player.initialize();
     console.log('change view');
     if (!video_sphere.getAttribute('visible'))
-        video.setAttribute('visible', true);
+        video_sphere.setAttribute('visible', true);
 
     //TODO set rotation
 }
