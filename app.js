@@ -4,17 +4,14 @@ var http = require('http').createServer(app);
 
 var path = require('path');
 
-const MongoClient = require('mongodb').MongoClient
+const MongoClient = require('mongodb').MongoClient;
 const ObjectID = require('mongodb').ObjectID;
 const assert = require('assert');
-
 var client = null;
 var port = 8080;
 
 var httpServer = http.listen(port, function () {
-    MongoClient.connect('mongodb://localhost:27017', function (err, client) {
-        this.client = client;
-    });
+
     console.log("http server running on " + port);
 });
 
@@ -84,7 +81,7 @@ app.post('/upload', function (req, res) {
                                     if (err)
                                         throw err;
                                     else {
-                                        var metadataObj = {}
+                                        var metadataObj = {};
                                         for (var index in metadata) {
                                             metadataObj[index] = metadata[index]
                                         }
@@ -92,7 +89,7 @@ app.post('/upload', function (req, res) {
                                             "filename": file_name,
                                             "location": final_location,
                                             "metadata": metadataObj
-                                        }
+                                        };
                                         console.log(preparedJSON);
                                         collection.insertOne(preparedJSON, function (error, response) {
                                             console.log(response);
@@ -123,14 +120,22 @@ app.post('/upload', function (req, res) {
     });
 });
 
-app.post('/transfer', function(req, res, next) {
-    const db = client.db("virtualspace");
-    const collection = db.collection('concert');
-    let data = collection.find();
+app.post('/transfer', function (req, res) {
+    MongoClient.connect('mongodb://localhost:27017', function (err, client) {
+        if (err) throw err;
+
+        const db = client.db("virtualspace");
+        const collection = db.collection('concert');
+
+        collection.find().toArray(function (err, docs) {
+            if(err) throw err;
+            res.send(docs);
+        });
+    });
+
     // let json = JSON.parse(collection);
     //json 형식으로 보내 준다.
-    console.log(data);
-    res.send(data);
+
 });
 
 io.on('connection', function (socket) {
@@ -141,6 +146,5 @@ io.on('connection', function (socket) {
             const collection = db.collection('concert');
             socket.emit('transfer', collection);
         });
-        console.log("hello");
     });
 });

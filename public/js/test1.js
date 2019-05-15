@@ -1,6 +1,7 @@
 var video = null;
 var video_sphere = null;
 var socket = null;
+var mpd_list = null;
 
 var main_player = dashjs.MediaPlayer().create();
 main_player.initialize(document.querySelector('#view'));
@@ -15,6 +16,7 @@ AFRAME.registerComponent('view', {
     }
 });
 
+
 AFRAME.registerComponent('main', {
 
         init: function () {
@@ -26,10 +28,10 @@ AFRAME.registerComponent('main', {
                 url: '/transfer',                //주소
                 dataType: 'json',                  //데이터 형식
                 type: 'POST',                      //전송 타입
-                data: {'msg': $('#msg').val()},      //데이터를 json 형식, 객체형식으로 전송
+                contentType:"application/json; charset=utf-8",
                 success: function (result) {          //성공했을 때 함수 인자 값으로 결과 값 나옴
                     console.log(result);
-                } //function끝
+                } //function 끝
             });
 
         }
@@ -53,15 +55,4 @@ function chage_view(element) {
 
     //TODO set rotation
 }
-
-var call = $.ajax({
-    url: '/transfer',                //주소
-    dataType: 'json',                  //데이터 형식
-    type: 'POST',                      //전송 타입
-    data: {'msg': $('#msg').val()},      //데이터를 json 형식, 객체형식으로 전송
-    success: function (result) {          //성공했을 때 함수 인자 값으로 결과 값 나옴
-        console.log(result);
-    } //function끝
-});
-
 
