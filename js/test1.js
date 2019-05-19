@@ -1,102 +1,108 @@
-var v1 = dashjs.MediaPlayer().create();
-var v2 = dashjs.MediaPlayer().create(); //initial view
-var v3 = dashjs.MediaPlayer().create();
-var v4 = dashjs.MediaPlayer().create();
-var v5 = dashjs.MediaPlayer().create();
+var video = null;
+var video_sphere = null;
+var socket = null;
+var mpd_list = null;
+var database = null;
+var dbArray = null;
+var currentId = null;
+// var pos_x = null;
+// var pos_y = null;
+// var pos_z = null;
 
-v1.setAutoPlay(false);
-v2.setAutoPlay(true);
-v3.setAutoPlay(false);
-v4.setAutoPlay(false);
-v5.setAutoPlay(false);
 
-var v1_url = "video/cam1/cam1dash.mpd"
-var v2_url = "video/cam2/cam2dash.mpd"
-var v3_url = "video/cam3/cam3dash.mpd"
-var v4_url = "video/cam4/cam4dash.mpd"
-var v5_url = "video/cam5/cam5dash.mpd"
+var main_player = dashjs.MediaPlayer().create();
+main_player.initialize(document.querySelector('#view'));
+main_player.setAutoPlay(true);
 
-function change (id){
-    var camera = document.querySelector("#camera")
 
-    if(id == "cam1") {
-        console.log("change");
-        camera.setAttribute('position','-3 0.08 0')
-        v2.attachSource(v1_url);
-        v1.attachSource(v1_url);
-        v2.initialize();
-        v1.initialize();
-    }else if(id == "cam2"){
-        console.log("change");
-        camera.setAttribute('position','0 0.08 0')
-        v2.attachSource(v2_url);
-        v2.initialize();
-        
-    }else if(id == "cam3"){
-        console.log("change");
-        camera.setAttribute('position','3 0.08 0')
-        v2.attachSource(v3_url);
-        v3.attachSource(v3_url);
-        v2.initialize();
-        v3.initialize();
-    }else if(id == "cam4"){
-        console.log("change");
-        camera.setAttribute('position','-3 0.08 3.5')
-        v2.attachSource(v4_url);
-        v4.attachSource(v4_url);
-        v2.initialize();
-        v4.initialize();
-    }else if(id == "cam5"){
-        console.log("change");
-        camera.setAttribute('position','3 0.08 3.5')
-        v2.attachSource(v5_url);
-        v5.attachSource(v5_url);
-        v2.initialize();
-        v5.initialize();
-    };
+AFRAME.registerComponent('main', {
+    init: function () {
+        //     var background = document.querySelector("#background");
+        video_sphere = document.querySelector("#vr_view");
 
-};
-AFRAME.registerComponent('main',{
-    schema: {
-        event: {type: 'string', default: ''},
-        message: {type: 'string', default: 'Hello, World'},
-    },
+        $.ajax({
+            url: '/transfer',                //주소
+            dataType: 'json',                  //데이터 형식
+            type: 'POST',                      //전송 타입
+            contentType:"application/json; charset=utf-8",
+            success: function (result) {    
+                      //성공했을 때 함수 인자 값으로 결과 값 나옴
+                database = result;
+                console.log(database)
+                //console.log("result:"+a);
+            } //function 끝
+        });
 
-    init: function(){
-        var cursor = document.querySelector("#cursor");
-
-        cursor.onmouseleave = function(evt){
-            this.setAttribute('color','black');
-            var scale = evt.detail.intersectedEl.object3D.scale;
-            scale.set(1,1,1);
-        }
-
-        cursor.onmouseenter = function(evt){
-            this.setAttribute('color','green');
-            var scale = evt.detail.intersectedEl.object3D.scale;
-            scale.set(1.5,1.5,1.5);
-        }
-
-        cursor.onclick = function (evt) {
-            console.log(evt.detail.intersectedEl.id);
-            change(evt.detail.intersectedEl.id);
-        }
-        v1.initialize(document.querySelector("#view1"), v1_url);
-        v2.initialize(document.querySelector("#view2"), v2_url);
-        v3.initialize(document.querySelector("#view3"), v3_url);
-        v4.initialize(document.querySelector("#view4"), v4_url);
-        v5.initialize(document.querySelector("#view5"), v5_url);
-        
-    },
-    update: function () {
-        // Do something when component's data is updated.
-    },
-
-    remove: function () {
-        // Do something the component or its entity is detached.
-    },
-
-    tick: function (time, timeDelta) {
-        // Do something on every scene tick or frame.
     }
-})
+}
+);
+
+AFRAME.registerComponent('view', {
+    init: function () {
+        var el = this.el;
+        el.addEventListener('click', function (evt) {
+            chage_view(el);
+        });
+        el.addEventListener('mouseenter', function(evt) { 
+            currentId = this.getAttribute('id')
+            for(var i=0; i < database.length; i++){
+               if(database[i].filename.split('.mp4')[0] == currentId){
+                   var pos_x = database[i].metadata.pos.split(',')[0]; // - 0.35 ;
+                   var pos_y = database[i].metadata.pos.split(',')[1]; // - 0.04
+                   var pos_z_string = database[i].metadata.pos.split(',')[2];
+                    var pos_z = Number(pos_z_string);// + 0.02;
+                   drawArrow(pos_x, pos_y, pos_z);
+               }
+            };
+            //drawArrow();
+            //console.log(this.getAttribute('id')); 
+        });
+        el.addEventListener('mouseleave', function(evt){
+            //removeArrow();
+        })
+    }
+});
+
+
+// function request_mpd(id) {
+//     // TODO mpd and view matching required
+//     console.log("id:"+id)
+//     return "files/" + id + "/" + id + "_dash.mpd";
+// }
+
+function chage_view(element) {
+    // var vr_view = document.querySelector("#vr_view");
+    var mpd = request_mpd(element.id); // video/v1/v1_dash.mpd
+    main_player.attachSource(mpd);
+    main_player.initialize();
+    console.log('change view');
+    if (!video_sphere.getAttribute('visible'))
+        video_sphere.setAttribute('visible', true);
+
+    //TODO set rotation
+}
+
+function drawArrow(pos_x, pos_y, pos_z){
+    console.log("id:"+currentId);
+    var selectArrow = document.querySelector('#arrow');
+    var rot = -Math.atan(pos_z/pos_x)*180/Math.PI
+    console.log('rotation_Y:'+ rot);
+    if(currentId == "v3"||currentId == "v5"){
+        var rot2 = rot+180
+        selectArrow.setAttribute('rotation', 0+" "+rot2+" "+30);
+    }else{
+        selectArrow.setAttribute('rotation', 0+" "+rot+" "+30);
+    }
+    var show_x = pos_x - 0.35;
+    var show_y = pos_y - 0.04;
+    var show_z = pos_z + 0.02;
+    selectArrow.setAttribute('visible', true);
+    selectArrow.setAttribute('position', show_x+" "+show_y+" "+show_z);
+    
+}
+
+
+// function removeArrow(){
+//     var selectArrow = document.querySelector("#arrow");
+//     selectArrow.setAttribute('visible', false);
+// }
