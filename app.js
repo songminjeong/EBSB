@@ -4,14 +4,12 @@ var http = require('http').createServer(app);
 
 var path = require('path');
 
-// var io = require('socket.io').listen(httpServer);
-
-const MongoClient = require('mongodb').MongoClient
+const MongoClient = require('mongodb').MongoClient;
 const ObjectID = require('mongodb').ObjectID;
 const assert = require('assert');
 
 var client = null;
-var port = 5334;
+var port = 8080;
 
 var httpServer = http.listen(port, function () {
     MongoClient.connect('mongodb://localhost:27017', function (err, client) {
@@ -20,6 +18,7 @@ var httpServer = http.listen(port, function () {
     console.log("http server running on " + port);
 });
 
+var io = require('socket.io').listen(httpServer);
 
 app.use(express.static(path.join(__dirname, '/public')));
 
@@ -132,4 +131,16 @@ app.post('/transfer', function(req, res, next) {
     //json 형식으로 보내 준다.
     console.log(data);
     res.send(data);
+});
+
+io.on('connection', function (socket) {
+    socket.on('start', function () {
+        MongoClient.connect('mongodb://localhost:27017', function (err, client) {
+            assert.equal(null, err);
+            const db = client.db("virtualspace");
+            const collection = db.collection('concert');
+            socket.emit('transfer', collection);
+        });
+        console.log("hello");
+    });
 });
