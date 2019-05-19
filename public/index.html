@@ -12,33 +12,18 @@
 <script src="js/test1.js"></script>
 
 <a-scene main raycaster cursor="rayOrigin: mouse">
-
 <!--assets-->
   <a-assets>
     <video id="view" crossorigin="anonymous" muted></video>
-    <!--<video id="view1" crossorigin="anonymous" muted></video>-->
-    <!--<video id="view2" crossorigin="anonymous" muted></video>-->
-    <!--<video id="view3" crossorigin="anonymous" muted></video>-->
-    <!--<video id="view4" crossorigin="anonymous" muted></video>-->
-    <!--<video id="view5" crossorigin="anonymous" muted></video>-->
-    <!--<image id="background"></image>-->
-    <!--<image id="view1_img" src="publicimage/view1.png"></image>-->
-    <!--<image id="view2_img" src="image/view2.png"></image>-->
-    <!--<image id="view3_img" src="image/view3.png"></image>-->
-    <!--<image id="view4_img" src="image/view4.png"></image>-->
-    <!--<image id="view5_img" src="image/view5.png"></image>-->
   </a-assets>
 
     <!--camera & cursor-->
     <a-entity look-controls camera id="camera" position ="0 0.08 0" fov="60">
-        <a-cursor id="cursor"></a-cursor>
+        <!--<a-cursor id="cursor"></a-cursor>-->
     </a-entity>
 
-    <!--360 background-->
-    <!--<a-videosphere id="vr_view" rotation="0 90 0"></a-videosphere>-->
-    <!-- <a-box src="#sibal" depth=0.02 height="0.1" width="0.1" rotation="0 90 0" position="3 0.08 0"></a-plane> -->
-
     <a-videosphere id="vr_view" src="#view" rotation="0 90 0"></a-videosphere>
+
 <!--viewpoints-->
     <a-entity id="view_sphere" rotation="0 180 0">
         <a-entity view id="v1" geometry="primitive: box; width:0.3; height:0.3; depth:0.3" position="-3 0.08 0"></a-entity>
@@ -47,13 +32,6 @@
         <a-entity view id="v4" geometry="primitive: box; width:0.3; height:0.3; depth:0.3" position="-3 0.08 3.5"></a-entity>
         <a-entity view id="v5" geometry="primitive: box; width:0.3; height:0.3; depth:0.3" position="3 0.08 3.5"></a-entity>
     </a-entity>
-
-    <!-- <a-sphere id="cam1" position="3 0.08 0" src="#view1" radius="0.05"></a-sphere>
-    <a-sphere id="cam2" position="0 0.08 0" src="#view2" radius="0.05"></a-sphere>
-    <a-sphere id="cam3" position="-3 0.08 0"  src="#view3" radius="0.05"></a-sphere>
-    <a-sphere id="cam4" position="3 0.08 3.5"  src="#view4" radius="0.05"></a-sphere>
-    <a-sphere id="cam5" position="-3 0.08 3.5"  src="#view5" radius="0.05"></a-sphere> -->
-
 </a-scene>
 
 </body>

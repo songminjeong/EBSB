@@ -1,6 +1,6 @@
 var path = require('path');
 
-class node {
+export class node {
     constructor(mpd_info) {
         this.pos = mpd_info["pos"];
         this.id = mpd_info["id"];
