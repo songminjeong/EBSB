@@ -1,41 +1,162 @@
-var createError = require('http-errors');
 var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-
 var app = express();
+var http = require('http').createServer(app);
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+var path = require('path');
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+const MongoClient = require('mongodb').MongoClient;
+const ObjectID = require('mongodb').ObjectID;
+const assert = require('assert');
+var client = null;
+var port = 5334;
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+var httpServer = http.listen(port, function () {
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
+    console.log("http server running on " + port);
 });
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+var io = require('socket.io').listen(httpServer);
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+app.use(express.static(path.join(__dirname, '/public')));
+
+//app.use("/files", express.static(path.join(__dirname, '/files')));
+
+app.get('/demo', function (req, res) {
+    res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-module.exports = app;
+app.get('/test', function (req, res) {
+    res.sendFile(path.join(__dirname, 'public/main.html'));
+});
+
+app.post('/upload', function (req, res) {
+    var form = new formidable.IncomingForm();
+    console.log(form.multiples);
+    form.multiples = true;
+    form.maxFileSize = 1024 * 1024 * 1024;
+    form.maxFieldsSize = 1024 * 1024 * 1024;
+    form.hash = 'md5';
+    form.parse(req, function (err, fields, files) {
+        res.writeHead(200, {'content-type': 'text/plain'});
+        res.write('received upload:\n\n');
+        res.end(util.inspect({fields: fields, files: files}));
+    });
+
+    form.on('end', function (fields, files) {
+        // console.log(this.openedFiles);
+        console.log(" 총 업로드 파일 갯수 == ", this.openedFiles.length);
+        for (var i = 0; i < this.openedFiles.length; i++) {
+            /* Temporary location of our uploaded file */
+            var temp_path = this.openedFiles[i].path;
+            console.log(this.openedFiles[i])
+            /* The file name of the uploaded file */
+            var file_name = this.openedFiles[i].name;
+            var split_file = file_name.split('.mp4')
+            var hash = this.openedFiles[i].hash
+
+            /* Location where we want to copy the uploaded file */
+            var new_location = './files/';
+
+            console.log("temp_path == ", temp_path);
+            console.log("file_name == ", file_name);
+            //console.log(this.openedFiles[i]);
+            MongoClient.connect('mongodb://117.17.184.60:27017', function (err, client) {
+                assert.equal(null, err);
+                const db = client.db("virtualspace");
+                const collection = db.collection('concert');
+                console.log(temp_path);
+
+                var final_location = new_location + split_file[0] + '/';
+                console.log(final_location + split_file[0] + ".mp4");
+                //filename directory generate
+                fs.move(temp_path, final_location + split_file[0] + ".mp4", function (err) {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        //file metadata get function
+                        fs.readFile(final_location + split_file[0] + ".mp4", function (err, data) {
+                            if (err)
+                                throw err;
+                            else {
+                                exif.metadata(data, function (err, metadata) {
+                                    console.log("memory" + JSON.stringify(process.memoryUsage()))
+                                    if (err)
+                                        throw err;
+                                    else {
+                                        var metadataObj = {};
+                                        for (var index in metadata) {
+                                            metadataObj[index] = metadata[index]
+                                        }
+                                        var preparedJSON = {
+                                            "filename": file_name,
+                                            "location": final_location,
+                                            "metadata": metadataObj
+                                        };
+                                        console.log(preparedJSON);
+                                        collection.insertOne(preparedJSON, function (error, response) {
+                                            console.log(response);
+                                        })
+                                    }
+                                });
+                            }
+                            ;
+                        });
+                        //mpd auto generator (powershell script execute)
+                        var spawn = require("child_process").spawn, child;
+                        child = spawn("powershell.exe", ["./files/auto.ps1", split_file[0]]);
+                        child.stdout.on("data", function (data) {
+                            console.log("Powershell Data: " + data);
+                        });
+                        child.stderr.on("data", function (data) {
+                            console.log("Powershell Script: " + data);
+                        });
+                        child.on("exit", function () {
+                            var mpdname = split_file[0] + "_dash.mpd";
+                            console.log("mpdname:"+mpdname);
+                            console.log("newid:"+o_id);
+                            console.log("db:"+db)
+                            console.log("collection:"+collection);
+                            //db update
+                            collection.updateOne({_id:o_id}, {$set: {"mpdname":mpdname}}, {upsert: true}, function(err, res){
+                                assert.equal(null, err);
+                                console.log(res)
+                            });
+                            console.log("Powershell Script finished");
+
+                        });
+                        child.stdin.end();
+                    }
+                })
+            });
+        }
+    });
+});
+
+app.post('/transfer', function (req, res) {
+    MongoClient.connect('mongodb://117.17.184.60:27017', function (err, client) {
+        if (err) throw err;
+
+        const db = client.db("virtualspace");
+        const collection = db.collection('concert');
+
+        collection.find().toArray(function (err, docs) {
+            if(err) throw err;
+            res.send(docs);
+        });
+    });
+
+    // let json = JSON.parse(collection);
+    //json 형식으로 보내 준다.
+
+});
+
+io.on('connection', function (socket) {
+    socket.on('start', function () {
+        MongoClient.connect('mongodb://117.17.184.60:27017', function (err, client) {
+            assert.equal(null, err);
+            const db = client.db("virtualspace");
+            const collection = db.collection('concert');
+            socket.emit('transfer', collection);
+        });
+    });
+});
