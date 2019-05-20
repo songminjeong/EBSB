@@ -16,25 +16,25 @@ main_player.setAutoPlay(true);
 
 
 AFRAME.registerComponent('main', {
-    init: function () {
-        //     var background = document.querySelector("#background");
-        video_sphere = document.querySelector("#vr_view");
+        init: function () {
+            //     var background = document.querySelector("#background");
+            video_sphere = document.querySelector("#vr_view");
 
-        $.ajax({
-            url: '/transfer',                //주소
-            dataType: 'json',                  //데이터 형식
-            type: 'POST',                      //전송 타입
-            contentType:"application/json; charset=utf-8",
-            success: function (result) {    
-                      //성공했을 때 함수 인자 값으로 결과 값 나옴
-                database = result;
-                console.log(database)
-                //console.log("result:"+a);
-            } //function 끝
-        });
+            $.ajax({
+                url: '/transfer',                //주소
+                dataType: 'json',                  //데이터 형식
+                type: 'POST',                      //전송 타입
+                contentType:"application/json; charset=utf-8",
+                success: function (result) {
+                    //성공했을 때 함수 인자 값으로 결과 값 나옴
+                    database = result;
+                    console.log(database)
+                    //console.log("result:"+a);
+                } //function 끝
+            });
 
+        }
     }
-}
 );
 
 AFRAME.registerComponent('view', {
@@ -43,16 +43,16 @@ AFRAME.registerComponent('view', {
         el.addEventListener('click', function (evt) {
             chage_view(el);
         });
-        el.addEventListener('mouseenter', function(evt) { 
+        el.addEventListener('mouseenter', function(evt) {
             currentId = this.getAttribute('id')
             for(var i=0; i < database.length; i++){
-               if(database[i].filename.split('.mp4')[0] == currentId){
-                   var pos_x = database[i].metadata.pos.split(',')[0]; // - 0.35 ;
-                   var pos_y = database[i].metadata.pos.split(',')[1]; // - 0.04
-                   var pos_z_string = database[i].metadata.pos.split(',')[2];
+                if(database[i].filename.split('.mp4')[0] == currentId){
+                    var pos_x = database[i].metadata.pos.split(',')[0]; // - 0.35 ;
+                    var pos_y = database[i].metadata.pos.split(',')[1]; // - 0.04
+                    var pos_z_string = database[i].metadata.pos.split(',')[2];
                     var pos_z = Number(pos_z_string);// + 0.02;
-                   drawArrow(pos_x, pos_y, pos_z);
-               }
+                    drawArrow(pos_x, pos_y, pos_z);
+                }
             };
             //drawArrow();
             //console.log(this.getAttribute('id')); 
@@ -98,7 +98,7 @@ function drawArrow(pos_x, pos_y, pos_z){
     var show_z = pos_z + 0.02;
     selectArrow.setAttribute('visible', true);
     selectArrow.setAttribute('position', show_x+" "+show_y+" "+show_z);
-    
+
 }
 
 
