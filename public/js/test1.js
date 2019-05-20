@@ -4,6 +4,7 @@ var video_sphere = document.getElementById("vr_view");
 var view_entity = document.createElement('a-entity');
 view_entity.setAttribute('id', 'view_sphere2');
 var main_player = dashjs.MediaPlayer().create();
+var database = null;
 
 function createEntity(mpd_list) {
     for (let i = 0; i < mpd_list.length; i++) {
@@ -18,33 +19,56 @@ function createEntity(mpd_list) {
     }
 }
 
-AFRAME.registerComponent('view', {
-    init: function () {
-        var el = this.el;
-        el.addEventListener('click', function (evt) {
-            chage_view(el);
-        });
-    }
-});
-
 AFRAME.registerComponent('main', {
 
         init: function () {
             main_player.initialize(document.querySelector('#view'), 'video/v2/v2_dash.mpd', true);
+
             // createEntity();
-            // $.ajax({
-            //     url: '/transfer',                //주소
-            //     dataType: 'json',                  //데이터 형식
-            //     type: 'POST',                      //전송 타입
-            //     data: {'msg': $('#msg').val()},      //데이터를 json 형식, 객체형식으로 전송
-            //     success: function (result) {          //성공했을 때 함수 인자 값으로 결과 값 나옴
-            //         console.log(result);
-            //     } //function끝
-            // });
+            $.ajax({
+                url: '/transfer',                //주소
+                dataType: 'json',                  //데이터 형식
+                type: 'POST',                      //전송 타입
+                // data: {'msg': $('#msg').val()},      //데이터를 json 형식, 객체형식으로 전송
+                success: function (result) {          //성공했을 때 함수 인자 값으로 결과 값 나옴
+                    database = result;
+                },
+                error: function (err) {
+                    console.log(err);
+                }//function끝
+            });
 
         }
     }
 );
+
+AFRAME.registerComponent('view', {
+    init: function () {
+        var el = this.el;
+
+
+
+        el.addEventListener('click', function (evt) {
+            chage_view(el);
+            console.log(database[1]);
+        });
+
+        // TODO callback으로 mouseenter evt 넣기
+        el.addEventListener('mouseenter', function(evt) {
+            for(let i=0; i < database.length; i++){
+                if(database[i].filename.split('.mp4')[0] === el.id){
+                    let pos_x = Number(database[i].metadata.pos.x); // - 0.35 ;
+                    let pos_y = Number(database[i].metadata.pos.y); // - 0.04
+                    let pos_z = Number(database[i].metadata.pos.z);
+                    //el.setAttribute('visible', "false");
+                    drawArrow(el.id, pos_x, pos_y, pos_z);
+                }
+            }
+            //drawArrow();
+            //console.log(this.getAttribute('id'));
+        });
+    }
+});
 
 
 function request_mpd(id) {
@@ -68,4 +92,20 @@ function chage_view(element) {
     //TODO set rotation
 }
 
-
+function drawArrow(id, pos_x, pos_y, pos_z){
+    console.log("id:"+id);
+    let selectArrow = document.querySelector('#arrow');
+    let rot = -Math.atan(pos_z / pos_x) * 180 / Math.PI;
+    console.log('rotation_Y:'+ rot);
+    if(id === "v3"|| id === "v5"){
+        var rot2 = rot + 180;
+        selectArrow.setAttribute('rotation', 0+" "+rot2+" "+30);
+    }else{
+        selectArrow.setAttribute('rotation', 0+" "+rot+" "+30);
+    }
+    let show_x = pos_x - 0.35;
+    let show_y = pos_y - 0.04;
+    let show_z = pos_z + 0.02;
+    selectArrow.setAttribute('visible', true);
+    selectArrow.setAttribute('position', show_x+" "+show_y+" "+show_z);
+}

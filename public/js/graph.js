@@ -1,6 +1,4 @@
-var path = require('path');
-
-export class node {
+export default class node {
     constructor(mpd_info) {
         this.pos = mpd_info["pos"];
         this.id = mpd_info["id"];
@@ -63,27 +61,4 @@ export class node {
     print_info() {
         console.log(this.link);
     }
-}
-
-// v1 = new node({x: 3, y: 0.8, z: 0}, "v1");
-// v2 = new node({x: 0, y: 0.8, z: 0}, "v2"); // 기준 y(높이)는 고려 안함
-// v3 = new node({x: -3, y: 0.8, z: 0}, "v3"); // 위에서 본 모양 기준
-// v4 = new node({x: 3, y: 0.8, z: 3.5}, "v4");
-// v5 = new node({x: -3, y: 0.8, z: 3.5}, "v5");
-//
-// v_list = [v1, v2, v3, v4, v5];
-//
-// v_list.forEach(function (v) {
-//     v1.weight_link(v);
-// });
-//
-// v1.print_info();
-
-function myConcat(separator) {
-    var s = "";
-    for (var i = 1; i < arguments.length; i++) {
-        s += arguments[i];
-        if (i < arguments.length - 1) s += separator
-    }
-    return s;
 }

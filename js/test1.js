@@ -44,13 +44,13 @@ AFRAME.registerComponent('view', {
             chage_view(el);
         });
         el.addEventListener('mouseenter', function(evt) {
-            currentId = this.getAttribute('id')
-            for(var i=0; i < database.length; i++){
-                if(database[i].filename.split('.mp4')[0] == currentId){
-                    var pos_x = database[i].metadata.pos.split(',')[0]; // - 0.35 ;
-                    var pos_y = database[i].metadata.pos.split(',')[1]; // - 0.04
-                    var pos_z_string = database[i].metadata.pos.split(',')[2];
-                    var pos_z = Number(pos_z_string);// + 0.02;
+            currentId = this.getAttribute('id');
+            for(let i=0; i < database.length; i++){
+                if(database[i].filename.split('.mp4')[0] === currentId){
+                    let pos_x = database[i].metadata.pos.split(',')[0]; // - 0.35 ;
+                    let pos_y = database[i].metadata.pos.split(',')[1]; // - 0.04
+                    let pos_z_string = database[i].metadata.pos.split(',')[2];
+                    let pos_z = Number(pos_z_string);// + 0.02;
                     drawArrow(pos_x, pos_y, pos_z);
                 }
             };
@@ -84,21 +84,20 @@ function chage_view(element) {
 
 function drawArrow(pos_x, pos_y, pos_z){
     console.log("id:"+currentId);
-    var selectArrow = document.querySelector('#arrow');
-    var rot = -Math.atan(pos_z/pos_x)*180/Math.PI
+    let selectArrow = document.querySelector('#arrow');
+    let rot = -Math.atan(pos_z / pos_x) * 180 / Math.PI;
     console.log('rotation_Y:'+ rot);
     if(currentId == "v3"||currentId == "v5"){
-        var rot2 = rot+180
+        var rot2 = rot + 180;
         selectArrow.setAttribute('rotation', 0+" "+rot2+" "+30);
     }else{
         selectArrow.setAttribute('rotation', 0+" "+rot+" "+30);
     }
-    var show_x = pos_x - 0.35;
-    var show_y = pos_y - 0.04;
-    var show_z = pos_z + 0.02;
+    let show_x = pos_x - 0.35;
+    let show_y = pos_y - 0.04;
+    let show_z = pos_z + 0.02;
     selectArrow.setAttribute('visible', true);
     selectArrow.setAttribute('position', show_x+" "+show_y+" "+show_z);
-
 }
 
 
