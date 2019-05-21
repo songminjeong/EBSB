@@ -1,8 +1,8 @@
-export default class node {
+class node {
     constructor(mpd_info) {
-        this.pos = mpd_info["pos"];
-        this.id = mpd_info["id"];
-        this.src = mpd_info["mpdname"];
+        this.pos = mpd_info.metadata.pos;
+        this.id = mpd_info._id;
+        this.src = mpd_info["location"] + mpd_info["mpdname"];
         this.link = [];
     }
 
@@ -14,7 +14,7 @@ export default class node {
             z: {z_ref: "", val: 0}
         };
 
-        let x_val = this.pos.x - node.pos.x;
+        let x_val = Number(this.pos.x) - Number(node.pos.x);
         let y_val = this.pos.y - node.pos.y;
         let z_val = this.pos.z - node.pos.z;
         let cnt = 0;
@@ -61,4 +61,16 @@ export default class node {
     print_info() {
         console.log(this.link);
     }
+}
+
+var arr = [];
+var node_arr = [];
+
+arr.forEach(function (item) {
+    node_arr.append(new node(item))
+});
+
+for (let i in node_arr) {
+    for (let j in node_arr)
+        node_arr[i].weight_link(j)
 }
