@@ -6,9 +6,9 @@ var database = null;
 var dbArray = null;
 var currentId = null;
 
-var pos_x = null;
-var pos_y = null;
-var pos_z = null;
+// var pos_x = null;
+// var pos_y = null;
+// var pos_z = null;
 
 var arr = [];
 
@@ -53,9 +53,10 @@ AFRAME.registerComponent('view', {
             currentId = this.getAttribute('id')
             for(var i=0; i < database.length; i++){
                 if(database[i].filename.split('.mp4')[0] == currentId){
-                    pos_x = database[i].metadata.pos.x.split("'")[1]; // - 0.35 ;
-                    pos_y = database[i].metadata.pos.y.split("'")[1]; // - 0.04
-                    pos_z = database[i].metadata.pos.z.split("'")[1];
+                    var pos_x = database[i].metadata.pos.x; // - 0.35 ;
+                    console.log(pos_x)
+                    var pos_y = database[i].metadata.pos.y; // - 0.04
+                    var pos_z = database[i].metadata.pos.z;
                     console.log("z:"+pos_z);// + 0.02;
                     drawArrow(pos_x, pos_y, pos_z);
                 }
@@ -77,7 +78,7 @@ AFRAME.registerComponent('view', {
 class node {
     constructor(mpd_info) {
         this.pos = mpd_info.metadata.pos;
-        this.id = mpd_info._id;
+        this.viewname = mpd_info["filename"].split(".mp4")[0];
         this.src = mpd_info["location"] + mpd_info["mpdname"];
         this.link = [];
     }
@@ -122,7 +123,7 @@ class node {
 
         if (cnt) {
             link_ref.distance = this.l2_norm(x_val, y_val, z_val);
-            this.link[node.id] = link_ref;
+            this.link[node.viewname] = link_ref;
         }
     }
     l2_norm(x, y, z) {
@@ -168,16 +169,22 @@ function drawArrow(pos_x, pos_y, pos_z){
     let rot = -Math.atan(pos_z/pos_x)*180/Math.PI;
     console.log("rot:"+rot)
     console.log("id:"+currentId);
-    // if(rot>0){
-    //     let rot2 = rot+180;
-    //     selectArrow.setAttribute('rotation', 0+" "+rot2+" "+30)
-    //     console.log('rot2적용'+rot2);
-    // }else{
+     if(rot>0){
+        let rot2 = rot+180;
+         selectArrow.setAttribute('rotation', 0+" "+rot2+" "+30)
+         console.log('rot2적용'+rot2);
+     }else{
         selectArrow.setAttribute('rotation', 0+" "+rot+" "+30);
         console.log('rot적용'+rot);
-    //}
+    }
 
     selectArrow.setAttribute('visible', true);
     selectArrow.setAttribute('position', pos_x+" "+pos_y+" "+pos_z);
 
 }
+
+
+// function removeArrow(){
+//     var selectArrow = document.querySelector("#arrow");
+//     selectArrow.setAttribute('visible', false);
+// }
