@@ -1,16 +1,20 @@
 var video = null;
-var video_sphere = null;
-var socket = null;
 var mpd_list = null;
 var database = null;
-var dbArray = null;
-var currentId = null;
+var enteredId = null;
+var arrayNum = null;
+var clickId = 'v2';
+var clickId_num = null;
 
-// var pos_x = null;
-// var pos_y = null;
-// var pos_z = null;
+var pos_x = null;
+var pos_y = null;
+var pos_z = null;
+var rot = null;
 
-var arr = [];
+var nodeArray = [];
+var distanceArr = [];
+var idArr = [];
+
 
 var main_player = dashjs.MediaPlayer().create();
 
@@ -18,6 +22,7 @@ var main_player = dashjs.MediaPlayer().create();
 AFRAME.registerComponent('main', {
         init: function () {
             main_player.initialize(document.querySelector('#view'), 'files/v2/v2_dash.mpd', true);
+            idArr.push('v2');
             $.ajax({
                 url: '/transfer',                //address
                 dataType: 'json',                  //Data type
@@ -26,14 +31,14 @@ AFRAME.registerComponent('main', {
                 success: function (result) {
                     database = result;
                     database.forEach(function (item) {
-                        arr.push(new node(item));
+                        nodeArray.push(new node(item));
                     });
-                    for (let i of arr) {
-                        arr.forEach(function (item) {
+                    for (let i of nodeArray) {
+                        nodeArray.forEach(function (item) {
                             i.weight_link(item);
                         });
                     }
-                    for (let i of arr)
+                    for (let i of nodeArray)
                         i.print_info();
                 },
                 error: function (err) {
@@ -50,14 +55,21 @@ AFRAME.registerComponent('view', {
         var el = this.el;
         
         el.addEventListener('mouseenter', function(evt) {
-            currentId = this.getAttribute('id')
+            enteredId = this.getAttribute('id')
+            //idArr.push(enteredId);
             for(var i=0; i < database.length; i++){
-                if(database[i].filename.split('.mp4')[0] == currentId){
-                    var pos_x = database[i].metadata.pos.x; // - 0.35 ;
-                    console.log(pos_x)
-                    var pos_y = database[i].metadata.pos.y; // - 0.04
-                    var pos_z = database[i].metadata.pos.z;
-                    console.log("z:"+pos_z);// + 0.02;
+                if(database[i].filename.split('.mp4')[0] == enteredId){
+                    
+                    pos_x = database[i].metadata.pos.x;
+                    pos_y = database[i].metadata.pos.y;
+                    pos_z = database[i].metadata.pos.z;
+                    
+                    
+                    console.log("i:"+i);
+                    // if(i == arrayNum){
+                    //     distanceArr = nodeArray[i].link;
+                    // };
+                    
                     drawArrow(pos_x, pos_y, pos_z);
                 }
             };
@@ -66,6 +78,7 @@ AFRAME.registerComponent('view', {
         });
         el.addEventListener('click', function (evt) {
             chage_view(el);
+            
 
         });
         el.addEventListener('mouseleave', function(evt){
@@ -105,7 +118,7 @@ class node {
 
         if (y_val < 0)
             link_ref.y.y_ref = "top";
-        else if (z_val > 0)
+        else if (y_val > 0)
             link_ref.y.y_ref = "bottom";
         else
             cnt += 1;
@@ -146,9 +159,15 @@ function request_mpd(id) {
     return "files/" + id + "/" + id + "_dash.mpd";
 }
 
-function chage_view(element) {
+function preload_mpd(){
     
-    var mpd = request_mpd(element.id);
+}
+
+function chage_view(element) {
+    clickId = element.id;
+    var mpd = request_mpd(clickId);
+    idArr.push(clickId);
+    console.log('clickId:'+clickId);
     var camera = document.querySelector("#camera");
     //var cur_time = main_player.getVideoElement().currentTime;
     
@@ -166,18 +185,20 @@ function drawArrow(pos_x, pos_y, pos_z){
     var selectArrow = document.querySelector('#arrow');
     console.log("x:"+pos_x);
     console.log("z:"+pos_z);
-    let rot = -Math.atan(pos_z/pos_x)*180/Math.PI;
+    arrayNum = clickId.split('v')[1]-1;
+    distanceArr = nodeArray[arrayNum].link
+    rot = -Math.atan(distanceArr[enteredId].z.val/distanceArr[enteredId].x.val)*180/Math.PI;
     console.log("rot:"+rot)
-    console.log("id:"+currentId);
-     if(rot>0){
-        let rot2 = rot+180;
-         selectArrow.setAttribute('rotation', 0+" "+rot2+" "+30)
-         console.log('rot2적용'+rot2);
-     }else{
-        selectArrow.setAttribute('rotation', 0+" "+rot+" "+30);
-        console.log('rot적용'+rot);
-    }
-
+    console.log("enteredid:"+enteredId);
+    //  if(rot<0){
+    //     let rot2 = rot+180;
+    //      selectArrow.setAttribute('rotation', 0+" "+rot2+" "+30)
+    //      console.log('rot2적용'+rot2);
+    //  }else{
+    //     selectArrow.setAttribute('rotation', 0+" "+rot+" "+30);
+    //     console.log('rot적용'+rot);
+    // }
+    selectArrow.setAttribute('rotation', 0+" "+rot+" "+30);
     selectArrow.setAttribute('visible', true);
     selectArrow.setAttribute('position', pos_x+" "+pos_y+" "+pos_z);
 
