@@ -14,26 +14,30 @@
 <a-scene main raycaster cursor="rayOrigin: mouse">
 <!--assets-->
   <a-assets>
-    <video id="view" crossorigin="anonymous" muted></video>
+    <video id="view" crossorigin="anonymous"></video>
     <img id="direction" src="image/arrow.png">
   </a-assets>
 
     <!--camera & cursor-->
-    <a-entity look-controls camera id="camera" position ="0 0.08 0" fov="60">
+    <a-entity look-controls camera id="camera" position ="0 1 0">
         <!--<a-cursor id="cursor"></a-cursor>-->
     </a-entity>
 
-    <a-videosphere id="vr_view" src="#view" rotation="0 90 0"></a-videosphere>
+    <a-videosphere id="vr_view" src="#view" rotation = "0 -90 0"></a-videosphere>
 
-<!--viewpoints-->
-    <a-entity id="view_sphere" rotation="0 180 0">
-        <a-entity view id="v1" geometry="primitive: box; width:0.3; height:0.3; depth:0.3" position="-3 0.08 0"></a-entity>
-        <a-entity view id="v2" geometry="primitive: box; width:0.3; height:0.3; depth:0.3" position="0 0.08 0"></a-entity>
-        <a-entity view id="v3" geometry="primitive: box; width:0.3; height:0.3; depth:0.3" position="3 0.08 0"></a-entity>
-        <a-entity view id="v4" geometry="primitive: box; width:0.3; height:0.3; depth:0.3" position="-3 0.08 3.5"></a-entity>
-        <a-entity view id="v5" geometry="primitive: box; width:0.3; height:0.3; depth:0.3" position="3 0.08 3.5"></a-entity>
-    </a-entity>
     <a-entity id = "arrow" geometry="primitive:cylinder; height:0.03; radius:0.25" material="src:#direction; alphaTest:0.55; opacity:0.8" rotation="0 0 30" position = "3 1.5 0" visible = "false"></a-entity>
+
+<!--viewpoints material="alphaTest:1; opacity:0;"-->
+    <a-entity id="view_sphere">
+        <a-entity view id="v1" geometry="primitive: box; width:0.5; height:0.5; depth:0.5" position="4 1 0"></a-entity>
+        <a-entity view id="v2" geometry="primitive: box; width:0.5; height:0.5; depth:0.5" position="0 1 0"></a-entity>
+        <a-entity view id="v3" geometry="primitive: box; width:0.5; height:0.5; depth:0.5" position="-4 1 0"></a-entity>
+        <a-entity view id="v4" geometry="primitive: box; width:0.5; height:0.5; depth:0.5" position="2 1 2"></a-entity>
+        <a-entity view id="v5" geometry="primitive: box; width:0.5; height:0.5; depth:0.5" position="-2 1 2"></a-entity>
+        <a-entity view id="v6" geometry="primitive: box; width:0.5; height:0.5; depth:0.5" position="4 1 4"></a-entity>
+        <a-entity view id="v7" geometry="primitive: box; width:0.5; height:0.5; depth:0.5" position="0 1 4"></a-entity>
+        <a-entity view id="v8" geometry="primitive: box; width:0.5; height:0.5; depth:0.5" position="-4 1 4"></a-entity>
+    </a-entity>
 </a-scene>
 
 </body>
