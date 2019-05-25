@@ -1,26 +1,7 @@
 var express = require('express');
-var app = express();
-var http = require('http').createServer(app)
-var path = require('path');
-var indexRouter = require('./routes/index');
-var transferRouter = require('./routes/transfer');
-var graph = require('./routes/graph');
-var port = 8080;
-
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
-
-app.use(express.static(path.join(__dirname, '/public')));
-
-app.use
-app.use('/', indexRouter);
-app.use('/transfer', transferRouter);
-app.use('/graph', graph);
-
-var httpServer = http.listen(port, function () {
-    console.log("http server running on " + port);
-});
+var router = express.Router();
+const MongoClient = require('mongodb').MongoClient;
+const ObjectID = require('mongodb').ObjectID;
 
 class node {
     constructor(mpd_info) {
@@ -87,7 +68,7 @@ class node {
     }
 }
 
-app.post('/', function(req, res, next) {
+router.post('/', function(req, res, next) {
     MongoClient.connect('mongodb://117.17.184.60:27017', function (err, client) {
         if (err) throw err;
         const db = client.db("virtualspace");
@@ -100,4 +81,5 @@ app.post('/', function(req, res, next) {
     });
 });
 
-module.exports = app;
+
+module.exports = router;

@@ -1,4 +1,8 @@
-class node {
+export default function start() {
+    console.log("hello aframe");
+}
+
+export class node {
     constructor(mpd_info) {
         this.pos = mpd_info.metadata.pos;
         this.id = mpd_info._id;
@@ -15,8 +19,8 @@ class node {
         };
 
         let x_val = Number(this.pos.x) - Number(node.pos.x);
-        let y_val = this.pos.y - node.pos.y;
-        let z_val = this.pos.z - node.pos.z;
+        let y_val = Number(this.pos.y) - Number(node.pos.y);
+        let z_val = Number(this.pos.z) - Number(node.pos.z);
         let cnt = 0;
 
         if (x_val < 0)
@@ -28,7 +32,7 @@ class node {
 
         if (y_val < 0)
             link_ref.y.y_ref = "top";
-        else if (z_val > 0)
+        else if (y_val > 0)
             link_ref.y.y_ref = "bottom";
         else
             cnt += 1;
@@ -50,6 +54,7 @@ class node {
         }
     }
 
+//
     l2_norm(x, y, z) {
         return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
     }
@@ -63,14 +68,32 @@ class node {
     }
 }
 
-var arr = [];
-var node_arr = [];
+export function main_init(el) {
+    let video = document.querySelector('#view');
+    let main_player = dashjs.MediaPlayer().create().initialize(video, 'video/v2/v2_dash.mpd', false);
 
-arr.forEach(function (item) {
-    node_arr.append(new node(item))
-});
-
-for (let i in node_arr) {
-    for (let j in node_arr)
-        node_arr[i].weight_link(j)
+    // createEntity();
+    $.ajax({
+        url: '/transfer',                //주소
+        dataType: 'json',                  //데이터 형식
+        type: 'POST',                      //전송 타입
+        // data: {'msg': $('#msg').val()},      //데이터를 json 형식, 객체형식으로 전송
+        success: function (result) {          //성공했을 때 함수 인자 값으로 결과 값 나옴
+            database = result;
+            database.forEach(function (item) {
+                nodeArray.push(new node(item));
+            });
+            for (let i of nodeArray) {
+                nodeArray.forEach(function (item) {
+                    i.weight_link(item);
+                });
+            }
+            for (let i of nodeArray)
+                i.print_info();
+        },
+        error: function (err) {
+            console.log(err);
+        }//function끝
+    });
+    return video, main_player;
 }
