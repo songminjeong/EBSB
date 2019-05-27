@@ -1,3 +1,34 @@
+var video = null;
+var mpd_list = null;
+var database = null;
+var enteredId = null;
+var arrayNum = null;
+var clickId = 'v2';
+var clickId_num = null;
+var videosphere = null;
+var buffer_count = 0;
+
+var pos_x = null;
+var pos_y = null;
+var pos_z = null;
+var yaw = null;
+var pitch = null;
+var rot = null;
+var cur_time = null;
+var nodeArray = [];
+var distanceArr = [];
+var idArr = [];
+
+var v1_url = "files/v1/v1_dash.mpd"
+var v2_url = "files/v2/v2_dash.mpd"
+var v3_url = "files/v3/v3_dash.mpd"
+var v4_url = "files/v4/v4_dash.mpd"
+var v5_url = "files/v5/v5_dash.mpd"
+var v6_url = "files/v6/v6_dash.mpd"
+var v7_url = "files/v7/v7_dash.mpd"
+var v8_url = "files/v8/v8_dash.mpd"
+
+var mpd = 'files/v2/v2_dash.mpd';
 
 
 var v1 = dashjs.MediaPlayer().create();
@@ -5,247 +36,250 @@ var v2 = dashjs.MediaPlayer().create(); //initial view
 var v3 = dashjs.MediaPlayer().create();
 var v4 = dashjs.MediaPlayer().create();
 var v5 = dashjs.MediaPlayer().create();
+var v6 = dashjs.MediaPlayer().create();
+var v7 = dashjs.MediaPlayer().create();
+var v8 = dashjs.MediaPlayer().create();
 
 
-v1.setAutoPlay(false);
-v2.setAutoPlay(true);
-v3.setAutoPlay(false);
-v4.setAutoPlay(false);
-v5.setAutoPlay(false);
+var main_player = null;
 
-var v1_url = "video/cam1/cam1_dash.mpd"
-var v2_url = "video/cam2/cam2_dash.mpd"
-var v3_url = "video/cam3/cam3_dash.mpd"
-var v4_url = "video/cam4/cam4_dash.mpd"
-var v5_url = "video/cam5/cam5_dash.mpd"
 
-var adjGraph = {
-    "cam1": {cams:[2, 4], directions:[5, 6]},
-    "cam2": {cams:[1, 3, 4, 5], directions:[1, 2, 3, 4]},
-    "cam3": {cams:[2, 5], directions:[7, 8]},
-    "cam4": {cams:[1, 5], directions:[9, 10]},
-    "cam5": {cams:[3, 4], directions:[11, 12]}
-}
-function change (id){
-    
-    var camera = document.querySelector("#camera")
-    var goCam = document.querySelector("#"+document.querySelector("#"+id).getAttribute("to"))
-    var curCam = document.querySelector("#"+document.querySelector("#"+id).getAttribute("from"))
-    var playtime = v2.getVideoElement().currentTime;
-    console.log("curCam:"+curCam.id)
-    console.log("goCam:"+goCam.id)
-    for(var i = 0; i < adjGraph[curCam.id].cams.length; i++){
-        var goCam = document.querySelector("#cam"+adjGraph[curCam.id].cams[i])
-        drawArrow(curCam, goCam, "direction"+adjGraph[curCam.id].directions[i])
-        
-    }
-    if(goCam.id == "cam1") {
-        console.log("change");
-        camera.setAttribute('position','3 0.08 0')
-        v2.attachSource(v1_url);
-        v2.getVideoElement().currentTime = playtime ;
-    }else if(goCam.id == "cam2"){
-        console.log("change");
-        camera.setAttribute('position','0 0.08 0')
-        v2.attachSource(v2_url);
-        v2.getVideoElement().currentTime = playtime
-        //v2.initialize();
-    }else if(goCam.id == "cam3"){
-        console.log("change");
-        camera.setAttribute('position','0 0.08 0')
-        v2.attachSource(v2_url);
-        v2.getVideoElement().currentTime = playtime
-        //v2.initialize();
-    }else if(goCam.id == "cam4"){
-        console.log("change");
-        camera.setAttribute('position','-3 0.08 3.5')
-        v2.attachSource(v4_url);
-        v2.getVideoElement().currentTime = playtime
-        // v4.attachSource(v4_url);
-        // v2.initialize();
-        // v4.initialize();
-    }else if(goCam.id == "cam5"){
-        console.log("change");
-        camera.setAttribute('position','3 0.08 3.5')
-        v2.attachSource(v5_url);
-        v2.getVideoElement().currentTime = playtime
-        // v5.attachSource(v5_url);
-        // v2.initialize();
-        // v5.initialize();
-    };
-
-};
-
-// AFRAME.registerComponent('view',{
-//     init: function() {
-//         var el = this.el;
-//         console.log(el);
-//     },
-//     tick: function() {
-//         if (this.el.id === "cam3") {
-//             console.log("cam3 duration -> " +v3.duration());
-//         }
-//     }
+//player.setLongFormContentDurationThreshold(200);
+// main_player.on('playbackProgress', function(result){
+//     console.log(result);
 // });
-function getRotation(curCam, goCam){
-    var curCamPos = curCam.getAttribute("position");
-    var goCamPos = goCam.getAttribute("position");
-    console.log("goCamPos:"+JSON.stringify(goCamPos))
-    var retPos={
-        x:0,
-        y:0,
-        z:0
-    };
-    retPos.x = (goCamPos.x - curCamPos.x) / 2;
-    retPos.z = (goCamPos.z - curCamPos.z) / 2;
-    retPos.y = Math.sqrt(Math.pow(retPos.x,2) + Math.pow(retPos.z,2));
-    console.log("retPos.x:"+retPos.x)
-    console.log("retPos.y:"+retPos.y)
-    console.log("retPos.z:"+retPos.z)
-    var retRot={
-        x:-86,
-        y:0,
-        z:0
-    };
-    console.log("retRot.z:"+Math.atan(retPos.z/retPos.x))
-    console.log("retRot.y:"+Math.asin(retPos.x/retPos.y))
-    
-    retRot.y = -Math.asin(retPos.x/retPos.y)*180/Math.PI
-    //retRot.z = Math.atan(retPos.z/retPos.x)*180/Math.PI;
-     
-    // retPos_y_radian = retPos.y * 180 / Math.PI;
-    // retPos_x_radian = retPos.x * 180 / Math.PI;
-    // console.log("retPos_y_radian:"+retPos_y_radian)
-    // console.log("retPos_x_radian:"+retPos_x_radian)
-    // retRot.y = Math.asin(retPos_y_radian/retPos_x_radian)
-    // console.log("retRot.y:"+retRot.y)
-    return retRot;
-}
-function getPosition(curCam, goCam){
-    var curCamPos = curCam.getAttribute("position");
-    var goCamPos = goCam.getAttribute("position");
-    console.log("goCamPos:"+JSON.stringify(goCamPos))
-    var retPos={
-        x:0,
-        y:0,
-        z:0
-    };
-    retPos.x = (goCamPos.x - curCamPos.x) / 2;
-    retPos.z = (goCamPos.z - curCamPos.z) / 2;
-    return retPos;
-}
-function drawArrow(curCam, goCam, direction){
-    var arrowPosition = getPosition(curCam, goCam);
-    var arrowRotation = getRotation(curCam, goCam);
-    var scene = document.querySelector('a-scene');
-    var entity = document.createElement('a-entity');
-    entity.setAttribute('id', direction)
-    entity.setAttribute('from', curCam.getAttribute('id'))
-    entity.setAttribute('to', goCam.getAttribute('id'))
-    entity.setAttribute('geometry', 'primitive: plane; width:0.5; height:0.5;')
-    entity.setAttribute('material', 'src:#arrow; alphaTest:0.6');
-    entity.setAttribute('position', arrowPosition.x+" "+arrowPosition.y+" "+arrowPosition.z );
-    entity.setAttribute('rotation', arrowRotation.x+" "+arrowRotation.y+" "+arrowRotation.z );
-    scene.appendChild(entity);
-}
+function init() {
+    AFRAME.registerComponent('main', {
+        init: function () {
+            videosphere = document.querySelector('#view');
 
-AFRAME.registerComponent('main',{
-    schema: {
-        event: {type: 'string', default: ''},
-        message: {type: 'string', default: 'Hello, World'},
-    },
-
-    init: function(){
-        var cursor = document.querySelector("#cursor");
-
-        cursor.onmouseleave = function(evt){
-            this.setAttribute('color','black');
-            var scale = evt.detail.intersectedEl.object3D.scale;
-            scale.set(1,1,1);
-        }
-
-        cursor.onmouseenter = function(evt){
-            this.setAttribute('color','green');
-            var scale = evt.detail.intersectedEl.object3D.scale;
-            scale.set(1.5,1.5,1.5);
-        }
-
-        cursor.onclick = function (evt){
-            var playview = evt.detail.intersectedEl.id;
+            main_player = dashjs.MediaPlayer().create();
+            main_player.initialize(videosphere, mpd, false);
             
-            console.log(playview);
-            change(evt.detail.intersectedEl.id);
-            //evt.detail.intersectedEl.id == 
-            //console.log(this.el.getVideoElement().currentTime);
+            main_player.on(dashjs.MediaPlayer.events.BUFFER_LOADED, function (evt) {
+                // buffer_count++;
+                // console.log(buffer_count);
+                // if (buffer_count == 2) {
+                //     if (main_player.isReady())
+                //         main_player.play();
+                //     buffer_count = 0;
+                // }
+                // console.log('buffer load'); // 3인데 2번 실행 됨
+            });
+            
+            main_player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, function (evt) {
+                console.log("manifest load")
+            });
+
+            main_player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, function (evt) {
+                main_player.attachSource(mpd);
+                console.log("reset");
+            });
+
+            idArr.push('v2');
+            $.ajax({
+                url: '/transfer',                //address
+                dataType: 'json',                  //Data type
+                type: 'POST',                      //transmission type
+                contentType: "application/json; charset=utf-8",
+                success: function (result) {
+                    database = result;
+                    database.forEach(function (item) {
+                        nodeArray.push(new node(item));
+                    });
+                    for (let i of nodeArray) {
+                        nodeArray.forEach(function (item) {
+                            i.weight_link(item);
+                        });
+                    }
+                    for (let i of nodeArray)
+                        i.print_info();
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+            //preload_segment();
+            // v1.initialize(document.querySelector("#view1"), v1_url);
+            // v2.initialize(document.querySelector("#view2"), v2_url);
+            // v3.initialize(document.querySelector("#view3"), v3_url);
+            // v4.initialize(document.querySelector("#view4"), v4_url);
+            // v5.initialize(document.querySelector("#view5"), v5_url);
+            // v6.initialize(document.querySelector("#view3"), v6_url);
+            // v7.initialize(document.querySelector("#view4"), v7_url);
+            // v8.initialize(document.querySelector("#view5"), v8_url);
         }
-
-        v1.initialize(document.querySelector("#view1"), v1_url);
-        v2.initialize(document.querySelector("#view2"), v2_url);
-        v3.initialize(document.querySelector("#view3"), v3_url);
-        v4.initialize(document.querySelector("#view4"), v4_url);
-        v5.initialize(document.querySelector("#view5"), v5_url);
-        for(var i = 0; i < adjGraph.cam2.cams.length; i++){
-            var goCam = document.querySelector("#cam"+adjGraph.cam2.cams[i])
-            drawArrow(cam2, goCam, "direction"+adjGraph.cam2.directions[i])
-        }
-        
-        // for(var i = 0; i < adjGraph.cam1.cams.length; i++){
-        //     var goCam = document.querySelector("#cam"+adjGraph.cam1.cams[i])
-        //     drawArrow(cam1, goCam, "direction"+adjGraph.cam1.directions[i])
-        // }
-    },
-    update: function () {
-        // Do something when component's data is updated.
-    },
-
-    remove: function () {
-        // Do something the component or its entity is detached.
-    },
-
-    tick: function (time, timeDelta) {
-        // Do something on every scene tick or frame.
     }
-})
+    );
 
-// //list array create
-// class Graph{
-//     constructor(noOfVertices){
-//         this.noOfVertices = noOfVertices;
-//         this.AdjList = new Map();
-//     }
-//     addVertex(v)
-//     {
-//         this.AdjList.set(v,[]);
-//     }
-//     addEdge(v,w)
-//     {
-//         this.AdjList.get(v).push(w);
-//         this.AdjList.get(w).push(v);
-//     }
-//     printGraph(){
-//         var get_keys = this.AdjList.keys();
-//         for(var i of get_keys){
-//             var get_values = this.AdjList.get(i);
-//             var conc = "";
+    AFRAME.registerComponent('view', {
+        init: function () {
+            var el = this.el;
 
-//             for(var j of get_values)
-//                 conc +=j + " ";
-//             console.log(i + "->" + conc);
-//         };
-//     };
-      
-// }
-// var g = new Graph(5);  
-// var vertices = ['direction1', 'direction2', 'direction3', 'direction4', 'direction5'];
-// for(var i = 0; i< vertices.length; i++){
-//     g.addVertex(vertices[i]);
-// }
-// g.addEdge('direction1', 'direction4');
-// g.addEdge('direction1', 'direction2');
-// g.addEdge('direction2', 'direction3');
-// g.addEdge('direction2', 'direction4');
-// g.addEdge('direction2', 'direction5');
-// g.addEdge('direction3', 'direction5');
-// g.addEdge('direction4', 'direction5');
-// g.printGraph();
+            el.addEventListener('mouseenter', function (evt) {
+                enteredId = this.getAttribute('id')
 
+                for (var i = 0; i < database.length; i++) {
+                    if (database[i].filename.split('.mp4')[0] == enteredId) {
+
+                        pos_x = database[i].metadata.pos.x;
+                        // console.log(pos_x);
+                        pos_y = database[i].metadata.pos.y;
+                        // console.log(pos_y);
+                        pos_z = database[i].metadata.pos.z;
+                        // console.log(pos_z);
+
+                        // console.log("i:" + i);
+                        drawArrow(pos_x, pos_y, pos_z);
+                    }
+                };
+                //drawArrow();
+                //console.log(this.getAttribute('id')); 
+            });
+            el.addEventListener('click', function (evt) {
+                cur_time = main_player.getVideoElement().currentTime;
+                chage_view(el, cur_time);
+            });
+        }
+    });
+
+}
+
+$(document).ready(function () {
+
+    init();
+
+    document.addEventListener('keyup', (evt) => {
+        const keyName = event.key;
+
+        if (keyName == 's') {
+            if (main_player.isPaused())
+                main_player.play()
+            else
+                main_player.pause();
+        }   
+
+    });
+    }
+)
+
+
+
+
+function chage_view(element) {
+    // console.log("curTime:" + cur_time);
+    clickId = element.id;
+    mpd = request_mpd(clickId);
+    idArr.push(clickId);
+
+    //main_player.getVideoElement().currentTime = cur_time;
+
+    var camera = document.querySelector("#camera");
+    camera.setAttribute('position', pos_x + " " + pos_y + " " + pos_z);
+    // console.log(camera.getAttribute('position'));
+    if (clickId == 'v8') {
+        var vr_view = document.querySelector("#vr_view")
+        vr_view.setAttribute('rotation', '0 90 0');
+    } else {
+        var vr_view = document.querySelector("#vr_view")
+        vr_view.setAttribute('rotation', '0 -90 0');
+    }
+
+    main_player.reset();
+    main_player.getVideoElement().currentTime = cur_time;
+
+    // console.log('change view');
+}
+
+function request_mpd(clickId) {
+    // TODO mpd and view matching required
+    // console.log("request_mpd:" + clickId)
+    return "files/" + clickId + "/" + clickId + "_dash.mpd";
+}
+
+function drawArrow(pos_x, pos_y, pos_z) {
+
+    var selectArrow = document.querySelector('#arrow');
+
+    arrayNum = clickId.split('v')[1] - 1;
+    distanceArr = nodeArray[arrayNum].link
+
+    var x = distanceArr[enteredId].x.val;
+    var z = distanceArr[enteredId].z.val;
+
+    //rotation
+    yaw = Math.atan(x / -z) * 180 / Math.PI;
+
+    pitch = Math.atan(Math.sqrt(x * x + z * z) / 1) * 180 / Math.PI;
+
+    var visi_y = pos_y - 0.5;
+    // console.log("enteredid:" + enteredId);
+    selectArrow.setAttribute('rotation', pitch + " " + yaw + " " + 30);
+    selectArrow.setAttribute('visible', true);
+    selectArrow.setAttribute('position', pos_x + " " + visi_y + " " + pos_z);
+}
+
+class node {
+    constructor(mpd_info) {
+        this.pos = mpd_info.metadata.pos;
+        this.viewname = mpd_info["fileId"]
+        this.src = mpd_info["location"] + mpd_info["mpdname"];
+        this.link = [];
+
+    }
+
+    weight_link(node) {
+        let link_ref = {
+            distance: 0,
+            x: { x_ref: "", val: 0 },
+            y: { y_ref: "", val: 0 },
+            z: { z_ref: "", val: 0 }
+        };
+
+        let x_val = Number(this.pos.x) - Number(node.pos.x);
+        let y_val = Number(this.pos.y) - Number(node.pos.y);
+        let z_val = Number(this.pos.z) - Number(node.pos.z);
+        let cnt = 0;
+
+        if (x_val < 0)
+            link_ref.x.x_ref = "right";
+        else if (x_val > 0)
+            link_ref.x.x_ref = "left";
+        else
+            cnt += 1;
+
+        if (y_val < 0)
+            link_ref.y.y_ref = "top";
+        else if (y_val > 0)
+            link_ref.y.y_ref = "bottom";
+        else
+            cnt += 1;
+
+        if (z_val < 0)
+            link_ref.z.z_ref = "up";
+        else if (z_val > 0)
+            link_ref.z.z_ref = "down";
+        else
+            cnt += 1;
+
+        link_ref.x.val = x_val >= 0 ? x_val : -1 * x_val;
+        link_ref.y.val = y_val >= 0 ? y_val : -1 * y_val;
+        link_ref.z.val = z_val >= 0 ? z_val : -1 * z_val;
+
+        if (cnt) {
+            link_ref.distance = this.l2_norm(x_val, y_val, z_val);
+            this.link[node.viewname] = link_ref;
+        }
+    }
+    l2_norm(x, y, z) {
+        return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
+    }
+
+    get_link(v_list) {
+
+    }
+
+    print_info() {
+        console.log(this.link);
+    }
+}
