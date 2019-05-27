@@ -13,12 +13,31 @@ var pos_z = null;
 var yaw = null;
 var pitch = null;
 var rot = null;
+var cur_time = null;
 
 var nodeArray = [];
 var distanceArr = [];
 var idArr = [];
 
+var v1_url = "files/v1/v1_dash.mpd"
+var v2_url = "files/v2/v2_dash.mpd"
+var v3_url = "files/v3/v3_dash.mpd"
+var v4_url = "files/v4/v4_dash.mpd"
+var v5_url = "files/v5/v5_dash.mpd"
+var v6_url = "files/v6/v6_dash.mpd"
+var v7_url = "files/v7/v7_dash.mpd"
+var v8_url = "files/v8/v8_dash.mpd"
 
+var v1 = dashjs.MediaPlayer().create();
+var v2 = dashjs.MediaPlayer().create(); //initial view
+var v3 = dashjs.MediaPlayer().create();
+var v4 = dashjs.MediaPlayer().create();
+var v5 = dashjs.MediaPlayer().create();
+var v6 = dashjs.MediaPlayer().create();
+var v7 = dashjs.MediaPlayer().create();
+var v8 = dashjs.MediaPlayer().create();
+
+var player = dashjs;
 var main_player = dashjs.MediaPlayer().create();
 
 
@@ -27,6 +46,7 @@ AFRAME.registerComponent('main', {
             videosphere = document.querySelector('#view');
             main_player.initialize(videosphere, 'files/v2/v2_dash.mpd', true);
             idArr.push('v2');
+
             $.ajax({
                 url: '/transfer',                //address
                 dataType: 'json',                  //Data type
@@ -49,7 +69,15 @@ AFRAME.registerComponent('main', {
                     console.log(err);
                 } 
             });
-
+            //preload_segment();
+            v1.initialize(document.querySelector("#view1"), v1_url);
+            v2.initialize(document.querySelector("#view2"), v2_url);
+            v3.initialize(document.querySelector("#view3"), v3_url);
+            v4.initialize(document.querySelector("#view4"), v4_url);
+            v5.initialize(document.querySelector("#view5"), v5_url);
+            v6.initialize(document.querySelector("#view3"), v6_url);
+            v7.initialize(document.querySelector("#view4"), v7_url);
+            v8.initialize(document.querySelector("#view5"), v8_url);
         }
     }
 );
@@ -60,7 +88,7 @@ AFRAME.registerComponent('view', {
         
         el.addEventListener('mouseenter', function(evt) {
             enteredId = this.getAttribute('id')
-            //idArr.push(enteredId);
+
             for(var i=0; i < database.length; i++){
                 if(database[i].filename.split('.mp4')[0] == enteredId){
                     
@@ -72,9 +100,6 @@ AFRAME.registerComponent('view', {
                     console.log(pos_z)                
                     
                     console.log("i:"+i);
-                    // if(i == arrayNum){
-                    //     distanceArr = nodeArray[i].link;
-                    // };
                     
                     drawArrow(pos_x, pos_y, pos_z);
                 }
@@ -83,22 +108,98 @@ AFRAME.registerComponent('view', {
             //console.log(this.getAttribute('id')); 
         });
         el.addEventListener('click', function (evt) {
-            chage_view(el);
+            cur_time = main_player.getVideoElement().currentTime
+            chage_view(el, cur_time);
 
         });
-        el.addEventListener('mouseleave', function(evt){
-            //removeArrow();
-        })
+        
     }
 });
+function request_mpd(clickId) {
+    // TODO mpd and view matching required
+    console.log("request_mpd:"+clickId)
+    return "files/" + clickId + "/" + clickId + "_dash.mpd";
+}
 
-//node graph
+// function preload_segment(){
+    
+//     for (var i = 0; i < database.length; i++){
+//         //Adding html <a-assets>
+//         var assets = document.querySelector('a-assets');
+//         console.log(assets);
+//         var video = document.createElement('video');
+//         video.setAttribute('id','v_asset'+(i+1));
+//         video.setAttribute('view','');
+//         video.setAttribute('crossorigin','anonymous');
+//         video.setAttribute('muted','');
+//         assets.appendChild(video);
+
+//         //src
+//         var srcArr = [];
+//         srcArr.push(database[i].location + database[i].mpdname);
+//         console.log(srcArr)
+
+//         //create player
+//         var player = document.querySelector(video).dashjs.MediaPlayer().create();
+//     };
+// };
+
+function chage_view(element) {
+    console.log("curTime:"+cur_time);
+    clickId = element.id;
+    var mpd = request_mpd(clickId);
+    idArr.push(clickId);
+
+    //main_player.getVideoElement().currentTime = cur_time;
+
+    var camera = document.querySelector("#camera");
+    camera.setAttribute('position', pos_x+" "+pos_y+" "+pos_z);
+    console.log(camera.getAttribute('position'));
+    if(clickId=='v8'){
+        var vr_view = document.querySelector("#vr_view")
+        vr_view.setAttribute('rotation','0 90 0');
+    }else{
+        var vr_view = document.querySelector("#vr_view")
+        vr_view.setAttribute('rotation','0 -90 0');
+    }
+    
+    main_player.attachSource(mpd);
+    main_player.getBufferLength() == 0;
+   
+    main_player.getVideoElement().currentTime = cur_time;
+    console.log('change view');
+
+}
+
+function drawArrow(pos_x, pos_y, pos_z){
+
+    var selectArrow = document.querySelector('#arrow');
+
+    arrayNum = clickId.split('v')[1]-1;
+    distanceArr = nodeArray[arrayNum].link
+    
+    var x = distanceArr[enteredId].x.val;
+    var z = distanceArr[enteredId].z.val;
+    
+    //rotation
+    yaw = Math.atan(x/-z)*180/Math.PI;
+    
+    pitch = Math.atan(Math.sqrt(x*x+z*z)/1)*180/Math.PI;
+    
+    var visi_y = pos_y-0.5;    
+    console.log("enteredid:"+enteredId);
+    selectArrow.setAttribute('rotation', pitch+" "+yaw+" "+30);
+    selectArrow.setAttribute('visible', true);
+    selectArrow.setAttribute('position', pos_x+" "+visi_y+" "+pos_z);
+
+}
 class node {
     constructor(mpd_info) {
         this.pos = mpd_info.metadata.pos;
-        this.viewname = mpd_info["filename"].split(".mp4")[0];
+        this.viewname = mpd_info["fileId"]
         this.src = mpd_info["location"] + mpd_info["mpdname"];
         this.link = [];
+        
     }
 
     weight_link(node) {
@@ -156,65 +257,3 @@ class node {
         console.log(this.link);
     }
 }
-
-
-function request_mpd(id) {
-    // TODO mpd and view matching required
-    console.log("request_mpd:"+id)
-    return "files/" + id + "/" + id + "_dash.mpd";
-}
-
-function preload_mpd(){
-    
-}
-
-function chage_view(element) {
-    clickId = element.id;
-    var mpd = request_mpd(clickId);
-    idArr.push(clickId);
-    
-    var camera = document.querySelector("#camera");
-    camera.setAttribute('position', pos_x+" "+pos_y+" "+pos_z);
-    console.log(camera.getAttribute('position'));
-    if(clickId=='v8'){
-        var vr_view = document.querySelector("#vr_view")
-        vr_view.setAttribute('rotation','0 90 0');
-        console.log('시발');
-    }
-    
-    main_player.attachSource(mpd);
-    main_player.initialize();
-    
-    console.log('change view');
-
-}
-
-function drawArrow(pos_x, pos_y, pos_z){
-
-    var selectArrow = document.querySelector('#arrow');
-    console.log("x:"+pos_x);
-    console.log("z:"+pos_z);
-    console.log('clickid:'+clickId);
-    arrayNum = clickId.split('v')[1]-1;
-    distanceArr = nodeArray[arrayNum].link
-
-    //rotation
-    yaw = Math.atan(distanceArr[enteredId].x.val/-distanceArr[enteredId].z.val)*180/Math.PI;
-    console.log('yaw:'+yaw);
-    pitch = Math.atan(Math.sqrt(distanceArr[enteredId].x.val*distanceArr[enteredId].x.val+distanceArr[enteredId].z.val*distanceArr[enteredId].z.val)/distanceArr[enteredId].y.val)*180/Math.PI;
-    console.log('pitch:'+pitch);
-    // rot = -Math.atan(distanceArr[enteredId].z.val/distanceArr[enteredId].x.val)*180/Math.PI;
-    // console.log("rot:"+rot)
-    var visi_y = pos_y-0.5;    
-    console.log("enteredid:"+enteredId);
-    selectArrow.setAttribute('rotation', pitch+" "+yaw+" "+30);
-    selectArrow.setAttribute('visible', true);
-    selectArrow.setAttribute('position', pos_x+" "+visi_y+" "+pos_z);
-
-}
-
-
-// function removeArrow(){
-//     var selectArrow = document.querySelector("#arrow");
-//     selectArrow.setAttribute('visible', false);
-// }
