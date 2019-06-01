@@ -1,7 +1,8 @@
+var main_player = dashjs.MediaPlayer().create();
+var video_list = [];
 var cur_node = 'v2';
 var p_list = [];
 var assets = null;
-
 
 AFRAME.registerComponent('main', {
     init: function () {
@@ -18,19 +19,15 @@ AFRAME.registerComponent('main', {
                     node_link[i].weight_link(node_link[j])
                 }
             }
-
-            preload_seg(node_link)
-            
+            preload_seg(node_link);  
             let video = document.querySelector('#v2_v');
-            var main_player = dashjs.MediaPlayer().create();
             main_player.initialize(video, 'files/v2/v2_dash.mpd', true);
-
-            
+        
 
             AFRAME.registerComponent('view', {
                 init: function () {
                     let el = this.el;
-                    addElEvent(el, node_link, main_player);
+                    addElEvent(el, node_link);
                     // addElEvent(el);
                 }
             });
@@ -66,7 +63,7 @@ function createView(data) {
         view.setAttribute("id", item.filename.split(".")[0]);
         view.setAttribute('material', {
            alphaTest:1,
-           opacity:0 
+           opacity:0
         });
         view.setAttribute('geometry', {
             primitive: 'box',
@@ -79,20 +76,16 @@ function createView(data) {
     });
 }
 
-function addElEvent(element, node_link, main_player) {
+function addElEvent(element, node_link) {
     element.addEventListener('click', function (evt) {
-        console.log(cur_node);
         //cur_node = v1, v2, v3 ..
         cur_node = element.id;
-        
-        if(p_list !== []){
-            main_player.reset();
-            p_list[cur_node].play();
-        }
+        console.log(cur_node);
+        var time = main_player.getVideoElement().currentTime;
         // mpd 변경
         let camera = document.querySelector('#camera');
-        
-        if(cur_node == 'v8'){
+        camera.setAttribute('position', node_link[cur_node].pos);
+        if(cur_node === 'v8'){
             let videosphere = document.querySelector('#vr_view');
             videosphere.setAttribute('rotation',{
                 x:0,
@@ -105,12 +98,35 @@ function addElEvent(element, node_link, main_player) {
                 x:0,
                 y:-90,
                 z:0
-            }); 
+            });
         }
         camera.setAttribute('position', node_link[cur_node].pos);
-        
-        preload_seg(node_link);
-             
+       // main_player.reset();
+        var vr_view = document.querySelector("#vr_view")
+        vr_view.setAttribute('src', '#' + cur_node + '_v')
+        vr_view.play();
+
+        preload_seg(node_link, time);
+
+        // for (let i in video_list) {
+        //     video_list[i].attachSource(node_link[i].src);
+        //     console.log(video_list[i]);
+        // }
+
+        // for (let i in video_list) {
+        //     video_list[i].attachSource(node_link[i].src);
+        // }
+        //
+        // for(let i in video_list) {
+        //     video_list[i].on(dashjs.MediaPlayer.events.SOURCE_INITIALIZED, function (evt) {
+        //         console.log("source initialize!");
+        //     });
+        //     video_list[i].on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (evt) {
+        //         console.log("stream initializa!");
+        //     });
+        // }
+            // console.log(node_link[cur_node].link[i]);
+        // v1 ~ v8 모든 node에 대한 정보 받음
     });
 
     element.addEventListener('mouseenter', function (evt) {
@@ -135,32 +151,63 @@ function drawArrow(element, node_link) {
         z: 30
     });
     let a = element.getAttribute('position');
-    console.log(a);
     arrow.setAttribute('position', a);
 }
-function preload_seg(node_link) {
-    let current = node_link[cur_node];
-    var srcArr = [];
-    p_list = [];
-    console.log(current.id);
 
-    //item = v1, v2, v3,...
-    assets = document.querySelector('a-assets');
-    for (let item in current.link) {
-        if (current.link[item].distance < 5) {
-            srcArr[item] = node_link[item].src;
-       };
-    };
-        for (let item in srcArr) {
+function preload_seg(node_link, time) {
+    
+    for (let i in node_link[cur_node].link) {
+        if (node_link[cur_node].link[i].distance < 5) {
+            if(video_list.indexOf(i) !== -1){
+                //video_list에 중복이 되지 않으면, video_list[i] 추가
+                
+                let video_dom = document.querySelector('#' + i + '_v');
+                video_list[i] = dashjs.MediaPlayer().create();
+                //video_list[i].initialize(video_dom, node_link[cur_node].src, true);
+                video_list[i].initialize(video_dom, node_link[i].src, true);
+                //video_list[i].preload();
+    
+                // video_list[i].on(dashjs.MediaPlayer.events.MANIFEST_LOADED, function (evt) {
+                //     console.log("manifest is loaded!");
+                // });
+                // video_list[i].on(dashjs.MediaPlayer.events.SOURCE_INITIALIZED, function (evt) {
+                //     console.log("source initialized");
+                // });
+                // video_list[i].on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (evt) {
+                //     console.log("stream initialized");
+                // }); 
+            }else{
+
+            }
             
-        let video_item = document.querySelector('#'+item+'_v');
-        p_item = dashjs.MediaPlayer().create();
-        p_item.initialize(video_item, srcArr[item], true);
-        
-        console.log(p_item.parent);
-        p_list[item] = p_item;
-        
-    };
+// console.log(node_link[cur_node].link[i]);
+        }
+    }
+    
+    
+   //  let current = node_link[cur_node];
+   //  var srcArr = [];
+   //  p_list = [];
+   //  console.log(current.id);
+   //
+   //  //item = v1, v2, v3,...
+   // assets = document.querySelector('a-assets');
+   //
+   //  for (let item in current.link) {
+   //      if (current.link[item].distance < 5) {
+   //          srcArr[item] = node_link[item].src;
+   //     };
+   //  };
+    //     for (let item in srcArr) {
+    //
+    //     let video_item = document.querySelector('#'+item+'_v');
+    //     p_item = dashjs.MediaPlayer().create();
+    //     p_item.initialize(video_item, srcArr[item], true);
+    //
+    //     console.log(p_item.parent);
+    //     p_list[item] = p_item;
+    //
+    // };
 };
 
 class node {
