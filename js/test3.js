@@ -1,5 +1,5 @@
 var main_player = dashjs.MediaPlayer().create();
-var video_list = [];
+var player_list = [];
 var cur_node = 'v2';
 var p_list = [];
 var assets = null;
@@ -19,12 +19,7 @@ AFRAME.registerComponent('main', {
                     node_link[i].weight_link(node_link[j])
                 }
             }
-            for(let i in node_link[cur_node].link){
-                var video_dom = document.querySelector('#' + i + '_v');
-                video_list[i] = dashjs.MediaPlayer().create();
-                video_list[i].initialize(video_dom, node_link[i].src, true)
-                console.log(video_list);
-            }
+           
             var video_dom = document.querySelector('#' + cur_node + '_v');
             var time = video_dom.currentTime;
             preload_seg(node_link, time);
@@ -146,29 +141,29 @@ function drawArrow(element, node_link) {
 }
 
 function preload_seg(node_link, time) {
+    
     for (let i in node_link[cur_node].link) {
+        var video_dom = document.querySelector('#' + i + '_v');
         
-        let video_dom = document.querySelector('#' + i + '_v');
-
+        console.log(node_link[cur_node].link[i].distance)
         if (node_link[cur_node].link[i].distance < 4) {
-            // if(video_dom.src == ""){
-            //     video_list[i] = dashjs.MediaPlayer().create();
-            //     video_list[i].initialize(video_dom, node_link[i].src, true)
-            // }
-            console.log(time)
+     
+            if(Object.keys(player_list).indexOf(i) == -1){
+                player_list[i] = dashjs.MediaPlayer().create();
+                player_list[i].initialize(video_dom, node_link[i].src, true)
+            }
+        
             video_dom.currentTime = time;
             video_dom.play();
             video_dom.setAttribute("preload", "auto")
-            // console.log('preload-o:'+i);
-            // video_list[i].initialize(video_dom, node_link[i].src, true);   
-            //video_list[i].seek(time);            
+            console.log('preload-o:'+i);    
         }
         else{
             video_dom.setAttribute("preload", "none")
             video_dom.pause();
-            // console.log('preload-x:'+i);
-            // video_list[i].initialize();        
-            //video_list[i].reset();
+            console.log('preload-x:'+i);
+            // player_list[i].initialize();        
+            //player_list[i].reset();
         };
     };
 };
