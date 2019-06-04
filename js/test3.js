@@ -1,8 +1,14 @@
-var main_player = dashjs.MediaPlayer().create();
+var date_main = new Date;
+var minute_main = date_main.getMinutes();
+var seconds_main = date_main.getSeconds();
+var milis_main = date_main.getMilliseconds();
+
+
 var player_list = [];
 var cur_node = 'v2';
 var p_list = [];
 var assets = null;
+var video_dom = null;
 
 AFRAME.registerComponent('main', {
     init: function () {
@@ -13,16 +19,17 @@ AFRAME.registerComponent('main', {
                 let name = item.filename.split('.')[0];
                 node_link[name] = new node(item);
             });
-
+            
             for (let i in node_link) {
                 for(let j in node_link) {
                     node_link[i].weight_link(node_link[j])
                 }
             }
-           
+            console.log(node_link);
             var video_dom = document.querySelector('#' + cur_node + '_v');
-            var time = video_dom.currentTime;
-            preload_seg(node_link, time);
+            
+            
+            preload_seg(node_link);
 
             AFRAME.registerComponent('view', {
                 init: function () {
@@ -78,14 +85,21 @@ function createView(data) {
 
 function addElEvent(element, node_link) {
     element.addEventListener('click', function (evt) {
+       getTime();
         //cur_node = v1, v2, v3 ..
-        var video_dom = document.querySelector('#' + cur_node + '_v');
-        var time = video_dom.currentTime;
-        console.log(time);
+        var video_dom_t = document.querySelector('#' + cur_node + '_v');
+        var time = video_dom_t.currentTime;
+        console.log('videotime:'+time);
+        
         cur_node = element.id;
+        
+        video_dom_c = document.querySelector('#' + cur_node + '_v');
+        if(video_dom_c.currentTime !== video_dom_t.currentTime){
+            video_dom_c.currentTime = time;
+            console.log('current video Time:'+video_dom_c.currentTime);
+        };
         console.log(cur_node);
         
-        // mpd 변경
         let camera = document.querySelector('#camera');
         camera.setAttribute('position', node_link[cur_node].pos);
         if(cur_node === 'v8'){
@@ -104,20 +118,28 @@ function addElEvent(element, node_link) {
             });
         }
         camera.setAttribute('position', node_link[cur_node].pos);
-       // main_player.reset();
-        preload_seg(node_link, time);
+       
+        preload_seg(node_link);//
 
         var vr_view = document.querySelector("#vr_view")
         vr_view.setAttribute('src', '#' + cur_node + '_v')
         vr_view.play();
-
-
 
     });
 
     element.addEventListener('mouseenter', function (evt) {
         drawArrow(element, node_link);
     });
+}
+function getTime(){
+    var date = new Date();
+    var minute = date.getMinutes();
+    var seconds = date.getSeconds();
+    var miliseconds = date.getUTCMilliseconds();
+    var time_now_min = minute - minute_main;
+    var time_now_s = seconds - seconds_main;
+    var time_now_m = miliseconds- milis_main;
+    console.log(time_now_min, time_now_s, time_now_m);
 }
 
 function drawArrow(element, node_link) {
@@ -140,30 +162,26 @@ function drawArrow(element, node_link) {
     arrow.setAttribute('position', a);
 }
 
-function preload_seg(node_link, time) {
+function preload_seg(node_link) {
     
     for (let i in node_link[cur_node].link) {
-        var video_dom = document.querySelector('#' + i + '_v');
-        
-        console.log(node_link[cur_node].link[i].distance)
-        if (node_link[cur_node].link[i].distance < 4) {
+        video_dom = document.querySelector('#' + i + '_v');
+        if (node_link[cur_node].link[i].distance <5) {
      
             if(Object.keys(player_list).indexOf(i) == -1){
                 player_list[i] = dashjs.MediaPlayer().create();
                 player_list[i].initialize(video_dom, node_link[i].src, true)
-            }
-        
-            video_dom.currentTime = time;
-            video_dom.play();
-            video_dom.setAttribute("preload", "auto")
+            };
+
+                video_dom.play();
+                video_dom.setAttribute("preload", "auto")
+
             console.log('preload-o:'+i);    
         }
         else{
             video_dom.setAttribute("preload", "none")
             video_dom.pause();
             console.log('preload-x:'+i);
-            // player_list[i].initialize();        
-            //player_list[i].reset();
         };
     };
 };
